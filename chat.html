@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Чат</title>
+<style>
+  body { font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 10px; }
+  #box { height: 70vh; overflow-y: auto; border: 1px solid #ccc; padding: 8px; }
+  .msg { margin: 4px 0; }
+  .me { text-align: right; color: #0a58ca; }
+  #form { display: flex; gap: 6px; margin-top: 8px; }
+  #text { flex: 1; padding: 8px; }
+</style>
+</head>
+<body>
+  <div id="box"></div>
+  <div id="form">
+    <input id="text" placeholder="Сообщение...">
+    <button onclick="send()">Отправить</button>
+  </div>
+
+<script>
+  // 1. Вставь сюда свою ссылку из MockAPI (ресурс называется messages)
+  const API = "https://XXXXXXXX.mockapi.io/messages";
+
+  // 2. Имя: у тебя "Ziyo", у друга поставь другое
+  const NAME = prompt("Твоё имя:") || "Аноним";
+
+  const box = document.getElementById("box");
+  const input = document.getElementById("text");
+
+  async function load() {
+    const res = await fetch(API);
+    const list = await res.json();
+    box.innerHTML = list.map(m =>
+      `<div class="msg ${m.name === NAME ? "me" : ""}"><b>${esc(m.name)}:</b> ${esc(m.text)}</div>`
+    ).join("");
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: NAME, text })
+    });
+    load();
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  }
+
+  input.addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+
+  load();
+  setInterval(load, 2000); // обновление каждые 2 секунды
+</script>
+</body>
+</html>
